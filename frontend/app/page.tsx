@@ -11,7 +11,6 @@ import Skills from '@/components/Skills'
 import Contact from '@/components/Contact'
 import Footer from '@/components/Footer'
 
-// Cursor is client-only (no SSR to avoid hydration mismatch)
 const Cursor = dynamic(() => import('@/components/Cursor'), { ssr: false })
 
 export default function Home() {

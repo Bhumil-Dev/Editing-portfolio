@@ -9,9 +9,10 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans:    ['var(--font-inter)', 'sans-serif'],
-        display: ['var(--font-space)', 'monospace'],
-        mono:    ['var(--font-mono)',  'monospace'],
+        sans:    ['var(--font-inter)', 'Inter', 'sans-serif'],
+        poppins: ['var(--font-poppins)', 'Poppins', 'sans-serif'],
+        display: ['var(--font-poppins)', 'Poppins', 'sans-serif'],
+        mono:    ['ui-monospace', 'monospace'],
       },
       colors: {
         accent:  { DEFAULT: '#6366f1', light: '#818cf8', dark: '#4f46e5' },
