@@ -1,5 +1,8 @@
 'use client'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
+
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 
 // Timeline clips
 const clips = [
@@ -26,6 +29,23 @@ const tools = [
 const waveHeights = [4, 8, 14, 10, 6, 16, 12, 8, 18, 10, 6, 14, 8, 12, 16, 6, 10, 14, 8, 12]
 
 export default function HeroVisualEdit() {
+  const [stats, setStats] = useState({ views: 10, projects: 150 })
+
+  useEffect(() => {
+    fetch(`${API}/api/stats`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && d.data) {
+          setStats({ views: d.data.views || 10, projects: d.data.projects || 150 })
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const floatStats = [
+    { value: `${stats.views}M+`,    label: 'Views',    color: '#8b5cf6', pos: 'top-4 right-0',   delay: 0.9 },
+    { value: `${stats.projects}+`,  label: 'Projects', color: '#10b981', pos: 'bottom-8 left-0', delay: 1.1 },
+  ]
   return (
     <div className="relative w-full h-[480px] flex items-center justify-center select-none">
 
@@ -161,10 +181,7 @@ export default function HeroVisualEdit() {
         </div>
 
         {/* ── Floating stat cards ── */}
-        {[
-          { value: '10M+', label: 'Views',    color: '#8b5cf6', pos: 'top-4 right-0',   delay: 0.9 },
-          { value: '150+', label: 'Projects', color: '#10b981', pos: 'bottom-8 left-0', delay: 1.1 },
-        ].map((s, i) => (
+        {floatStats.map((s, i) => (
           <motion.div key={i}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}

@@ -1,5 +1,8 @@
 'use client'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
+
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 
 // Animated code lines data
 const codeLines = [
@@ -13,7 +16,7 @@ const codeLines = [
   { text: '// ✓ Output: Amazing work', color: '#4ade80', indent: 0, delay: 0.6 },
 ]
 
-// Floating skill badges
+// Floating stat cards — now dynamic
 const badges = [
   { label: 'Premiere Pro', color: '#9999FF', x: -20, y: -30, delay: 0.8 },
   { label: 'React',        color: '#61DAFB', x: 20,  y: 20,  delay: 1.0 },
@@ -21,13 +24,24 @@ const badges = [
   { label: 'Node.js',      color: '#68A063', x: 15,  y: -60, delay: 1.4 },
 ]
 
-// Floating stat cards
-const stats = [
-  { value: '50+', label: 'Projects', color: '#6366f1', pos: 'top-4 right-0',   delay: 0.9 },
-  { value: '5+',  label: 'Yrs Exp',  color: '#10b981', pos: 'bottom-8 left-0', delay: 1.1 },
-]
-
 export default function HeroVisual() {
+  const [stats, setStats] = useState({ projects: 50, years: 5 })
+
+  useEffect(() => {
+    fetch(`${API}/api/stats`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && d.data) {
+          setStats({ projects: d.data.projects || 50, years: d.data.years || 5 })
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const floatStats = [
+    { value: `${stats.projects}+`, label: 'Projects', color: '#6366f1', pos: 'top-4 right-0',   delay: 0.9 },
+    { value: `${stats.years}+`,   label: 'Yrs Exp',  color: '#10b981', pos: 'bottom-8 left-0', delay: 1.1 },
+  ]
   return (
     <div className="relative w-full h-[480px] flex items-center justify-center select-none">
 
@@ -114,7 +128,7 @@ export default function HeroVisual() {
         </div>
 
         {/* ── Floating stat cards ── */}
-        {stats.map((s, i) => (
+        {floatStats.map((s, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, scale: 0.8 }}
