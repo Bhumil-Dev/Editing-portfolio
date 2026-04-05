@@ -1,6 +1,6 @@
 'use client'
 import { useRef } from 'react'
-import { motion, useInView } from 'framer-motion'
+import { motion } from 'framer-motion'
 import CountUp from 'react-countup'
 import { useInView as useIO } from 'react-intersection-observer'
 import { stats } from '@/data'

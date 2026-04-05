@@ -1,32 +1,33 @@
 'use client'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import type { Skill } from '@/data'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const skillIcons = [
-  // Video & Motion
-  { name: 'Premiere Pro',  logo: 'https://upload.wikimedia.org/wikipedia/commons/4/40/Adobe_Premiere_Pro_CC_icon.svg',  color: '#9999FF', cat: 'video' },
-  { name: 'After Effects', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/cb/Adobe_After_Effects_CC_icon.svg', color: '#9999FF', cat: 'video' },
-  { name: 'DaVinci Resolve',logo: 'https://upload.wikimedia.org/wikipedia/commons/9/90/DaVinci_Resolve_17_logo.svg',    color: '#FF6B6B', cat: 'video' },
-  { name: 'CapCut',        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Capcut-logo.svg/512px-Capcut-logo.svg.png', color: '#ffffff', cat: 'video' },
-  { name: 'Cinema 4D',     logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Cinema4D_Logo.svg/512px-Cinema4D_Logo.svg.png', color: '#FF6B35', cat: 'video' },
-  // Web Dev
-  { name: 'React',         logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg',                 color: '#61DAFB', cat: 'web' },
-  { name: 'Next.js',       logo: 'https://upload.wikimedia.org/wikipedia/commons/8/8e/Nextjs-logo.svg',               color: '#ffffff', cat: 'web' },
-  { name: 'Node.js',       logo: 'https://upload.wikimedia.org/wikipedia/commons/d/d9/Node.js_logo.svg',              color: '#68A063', cat: 'web' },
-  { name: 'MongoDB',       logo: 'https://upload.wikimedia.org/wikipedia/commons/9/93/MongoDB_Logo.svg',              color: '#47A248', cat: 'web' },
-  { name: 'Express',       logo: 'https://upload.wikimedia.org/wikipedia/commons/6/64/Expressjs.png',                 color: '#ffffff', cat: 'web' },
-  { name: 'Three.js',      logo: 'https://upload.wikimedia.org/wikipedia/commons/3/3f/Three.js_Icon.svg',             color: '#00F5FF', cat: 'web' },
-  { name: 'TypeScript',    logo: 'https://upload.wikimedia.org/wikipedia/commons/4/4c/Typescript_logo_2020.svg',      color: '#3178C6', cat: 'web' },
-  // Design
-  { name: 'Figma',         logo: 'https://upload.wikimedia.org/wikipedia/commons/3/33/Figma-logo.svg',                color: '#F24E1E', cat: 'design' },
-  { name: 'GSAP',          logo: 'https://cdn.worldvectorlogo.com/logos/gsap-greensock.svg',                          color: '#88CE02', cat: 'web' },
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+
+// Fallback static skills shown when DB is empty
+const FALLBACK_SKILLS = [
+  { _id: '1',  name: 'Premiere Pro',  logo: 'https://upload.wikimedia.org/wikipedia/commons/4/40/Adobe_Premiere_Pro_CC_icon.svg',  color: '#9999FF', category: 'video', order: 0 },
+  { _id: '2',  name: 'After Effects', logo: 'https://upload.wikimedia.org/wikipedia/commons/c/cb/Adobe_After_Effects_CC_icon.svg', color: '#9999FF', category: 'video', order: 1 },
+  { _id: '3',  name: 'DaVinci Resolve',logo:'https://upload.wikimedia.org/wikipedia/commons/9/90/DaVinci_Resolve_17_logo.svg',    color: '#FF6B6B', category: 'video', order: 2 },
+  { _id: '4',  name: 'CapCut',        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Capcut-logo.svg/512px-Capcut-logo.svg.png', color: '#ffffff', category: 'video', order: 3 },
+  { _id: '5',  name: 'Cinema 4D',     logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Cinema4D_Logo.svg/512px-Cinema4D_Logo.svg.png', color: '#FF6B35', category: 'video', order: 4 },
+  { _id: '6',  name: 'React',         logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg',                 color: '#61DAFB', category: 'web',   order: 5 },
+  { _id: '7',  name: 'Next.js',       logo: 'https://upload.wikimedia.org/wikipedia/commons/8/8e/Nextjs-logo.svg',               color: '#ffffff', category: 'web',   order: 6 },
+  { _id: '8',  name: 'Node.js',       logo: 'https://upload.wikimedia.org/wikipedia/commons/d/d9/Node.js_logo.svg',              color: '#68A063', category: 'web',   order: 7 },
+  { _id: '9',  name: 'MongoDB',       logo: 'https://upload.wikimedia.org/wikipedia/commons/9/93/MongoDB_Logo.svg',              color: '#47A248', category: 'web',   order: 8 },
+  { _id: '10', name: 'Express',       logo: 'https://upload.wikimedia.org/wikipedia/commons/6/64/Expressjs.png',                 color: '#ffffff', category: 'web',   order: 9 },
+  { _id: '11', name: 'Three.js',      logo: 'https://upload.wikimedia.org/wikipedia/commons/3/3f/Three.js_Icon.svg',             color: '#00F5FF', category: 'web',   order: 10 },
+  { _id: '12', name: 'TypeScript',    logo: 'https://upload.wikimedia.org/wikipedia/commons/4/4c/Typescript_logo_2020.svg',      color: '#3178C6', category: 'web',   order: 11 },
+  { _id: '13', name: 'Figma',         logo: 'https://upload.wikimedia.org/wikipedia/commons/3/33/Figma-logo.svg',                color: '#F24E1E', category: 'design',order: 12 },
+  { _id: '14', name: 'GSAP',          logo: 'https://cdn.worldvectorlogo.com/logos/gsap-greensock.svg',                          color: '#88CE02', category: 'web',   order: 13 },
 ]
 
-function SkillCard({ skill, index, inView }: { skill: typeof skillIcons[0]; index: number; inView: boolean }) {
+function SkillCard({ skill, index, inView }: { skill: Skill; index: number; inView: boolean }) {
   const cardRef = useRef<HTMLDivElement>(null)
 
   const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -74,7 +75,7 @@ function SkillCard({ skill, index, inView }: { skill: typeof skillIcons[0]; inde
         className="relative z-10 w-10 h-10 flex items-center justify-center"
       >
         <img
-          src={skill.logo}
+          src={skill.logo?.startsWith('/uploads') ? `${API}${skill.logo}` : skill.logo}
           alt={skill.name}
           className="w-full h-full object-contain drop-shadow-lg"
           style={{ filter: skill.color === '#ffffff' ? 'brightness(0) invert(1)' : 'none' }}
@@ -106,11 +107,23 @@ function SkillCard({ skill, index, inView }: { skill: typeof skillIcons[0]; inde
 }
 
 export default function Skills() {
+  const [skills, setSkills] = useState<Skill[]>([])
   const sectionRef = useRef<HTMLElement>(null)
-  const gridRef = useRef<HTMLDivElement>(null)
-  const inView = useInView(gridRef, { once: true, margin: '-100px' })
+  const gridRef    = useRef<HTMLDivElement>(null)
+  const inView     = useInView(gridRef, { once: true, margin: '-100px' })
 
-  const tools = ['Premiere Pro','After Effects','DaVinci Resolve','CapCut','Cinema 4D','React','Next.js','Node.js','MongoDB','Express','Three.js','TypeScript','Figma','GSAP']
+  useEffect(() => {
+    fetch(`${API}/api/skills`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && d.data.length > 0) setSkills(d.data)
+        else setSkills(FALLBACK_SKILLS)
+      })
+      .catch(() => setSkills(FALLBACK_SKILLS))
+  }, [])
+
+  const displaySkills = skills.length > 0 ? skills : FALLBACK_SKILLS
+  const tools = displaySkills.map(s => s.name)
 
   return (
     <section id="skills" ref={sectionRef} className="section-padding relative overflow-hidden">
@@ -159,8 +172,8 @@ export default function Skills() {
 
         {/* Skill icons grid */}
         <div ref={gridRef} className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-4 mb-16">
-          {skillIcons.map((skill, i) => (
-            <SkillCard key={skill.name} skill={skill} index={i} inView={inView} />
+          {displaySkills.map((skill, i) => (
+            <SkillCard key={skill._id} skill={skill} index={i} inView={inView} />
           ))}
         </div>
 
