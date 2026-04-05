@@ -2,102 +2,98 @@
 import { useEffect, useState } from 'react'
 import AdminShell from '@/components/admin/AdminShell'
 import { api } from '@/lib/api'
+import Link from 'next/link'
 
 interface Stats { projects: number; skills: number; services: number; messages: number; recent: any[] }
 
-function StatCard({ label, value, icon, color }: { label: string; value: number; icon: string; color: string }) {
-  return (
-    <div className="rounded-2xl p-6 border border-white/5 hover:border-white/10 transition-colors"
-      style={{ background: 'rgba(255,255,255,0.03)' }}>
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-2xl">{icon}</span>
-        <span className="text-xs font-mono tracking-widest px-2 py-1 rounded-full border"
-          style={{ color, borderColor: `${color}30`, background: `${color}10` }}>LIVE</span>
-      </div>
-      <p className="text-3xl font-bold text-white mb-1">{value}</p>
-      <p className="text-white/40 text-xs font-mono tracking-wider">{label}</p>
-    </div>
-  )
-}
-
 export default function Dashboard() {
-  const [stats, setStats] = useState<Stats | null>(null)
+  const [stats, setStats]   = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     api.stats().then(r => { setStats(r.data); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
+  const cards = [
+    { label: 'Projects',  value: stats?.projects || 0, href: '/admin/portfolio', color: '#6366f1' },
+    { label: 'Skills',    value: stats?.skills   || 0, href: '/admin/skills',    color: '#8b5cf6' },
+    { label: 'Services',  value: stats?.services || 0, href: '/admin/services',  color: '#10b981' },
+    { label: 'Messages',  value: stats?.messages || 0, href: '/admin/messages',  color: '#f59e0b' },
+  ]
+
+  const quickLinks = [
+    { href: '/admin/profile',   label: 'Edit Profile' },
+    { href: '/admin/stats',     label: 'Edit Stats' },
+    { href: '/admin/skills',    label: 'Manage Skills' },
+    { href: '/admin/services',  label: 'Manage Services' },
+    { href: '/admin/portfolio', label: 'Add Project' },
+    { href: '/',                label: '↗ View Site', external: true },
+  ]
+
   return (
     <AdminShell>
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="max-w-4xl mx-auto space-y-8">
+
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-wider">Dashboard</h1>
-          <p className="text-white/30 text-sm font-mono mt-1">Welcome back, Bhumil 👋</p>
+          <h1 className="text-xl font-semibold text-white">Dashboard</h1>
+          <p className="text-white/30 text-sm mt-1">Welcome back, Bhumil</p>
         </div>
 
-        {/* Stats */}
-        {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="rounded-2xl p-6 border border-white/5 animate-pulse h-32"
-                style={{ background: 'rgba(255,255,255,0.03)' }} />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="TOTAL PROJECTS" value={stats?.projects || 0} icon="◰" color="#00F5FF" />
-            <StatCard label="TOTAL SKILLS" value={stats?.skills || 0} icon="◈" color="#7B2FBE" />
-            <StatCard label="TOTAL SERVICES" value={stats?.services || 0} icon="◇" color="#00FF88" />
-            <StatCard label="MESSAGES" value={stats?.messages || 0} icon="◻" color="#F59E0B" />
-          </div>
-        )}
+        {/* Stat cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {loading
+            ? [...Array(4)].map((_, i) => (
+                <div key={i} className="rounded-xl p-5 animate-pulse h-24"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }} />
+              ))
+            : cards.map(c => (
+                <Link key={c.label} href={c.href}
+                  className="rounded-xl p-5 transition-all hover:scale-[1.02] block"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <p className="text-3xl font-bold text-white mb-1">{c.value}</p>
+                  <p className="text-white/40 text-xs">{c.label}</p>
+                  <div className="mt-3 h-0.5 rounded-full w-8" style={{ background: c.color }} />
+                </Link>
+              ))
+          }
+        </div>
 
-        {/* Quick Actions */}
+        {/* Quick actions */}
         <div>
-          <h2 className="text-white/60 text-xs font-mono tracking-widest mb-4">QUICK ACTIONS</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {[
-              { href: '/admin/profile',   icon: '◉', label: 'Edit Profile',  color: '#00F5FF' },
-              { href: '/admin/skills',    icon: '◈', label: 'Add Skill',     color: '#7B2FBE' },
-              { href: '/admin/services',  icon: '◇', label: 'Add Service',   color: '#00FF88' },
-              { href: '/admin/portfolio', icon: '◰', label: 'Add Project',   color: '#F59E0B' },
-              { href: '/admin/messages',  icon: '◻', label: 'Messages',      color: '#EF4444' },
-              { href: '/',                icon: '↗', label: 'View Site',     color: '#6B7280' },
-            ].map(a => (
-              <a key={a.href} href={a.href}
-                className="flex flex-col items-center gap-2 p-4 rounded-xl border border-white/5 hover:border-white/15 transition-all hover:-translate-y-0.5 text-center"
-                style={{ background: 'rgba(255,255,255,0.02)' }}>
-                <span className="text-xl" style={{ color: a.color }}>{a.icon}</span>
-                <span className="text-white/50 text-xs font-mono">{a.label}</span>
-              </a>
+          <p className="text-white/30 text-xs font-medium tracking-wider mb-3">QUICK ACTIONS</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {quickLinks.map(l => (
+              <Link key={l.href} href={l.href} target={l.external ? '_blank' : undefined}
+                className="px-4 py-3 rounded-xl text-sm text-white/50 hover:text-white transition-all hover:bg-white/5"
+                style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
+                {l.label}
+              </Link>
             ))}
           </div>
         </div>
 
-        {/* Recent Messages */}
+        {/* Recent messages */}
         <div>
-          <h2 className="text-white/60 text-xs font-mono tracking-widest mb-4">RECENT MESSAGES</h2>
-          <div className="rounded-2xl border border-white/5 overflow-hidden"
-            style={{ background: 'rgba(255,255,255,0.02)' }}>
+          <p className="text-white/30 text-xs font-medium tracking-wider mb-3">RECENT MESSAGES</p>
+          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
             {!stats?.recent?.length ? (
-              <div className="p-8 text-center text-white/20 font-mono text-sm">No messages yet</div>
+              <div className="p-8 text-center text-white/20 text-sm">No messages yet</div>
             ) : (
               <div className="divide-y divide-white/5">
                 {stats.recent.map((m: any) => (
-                  <div key={m._id} className="flex items-start gap-4 p-4 hover:bg-white/2 transition-colors">
-                    <div className="w-8 h-8 rounded-full bg-cyan-400/10 border border-cyan-400/20 flex items-center justify-center flex-shrink-0">
-                      <span className="text-cyan-400 text-xs font-bold">{m.name?.[0]?.toUpperCase()}</span>
+                  <div key={m._id} className="flex items-start gap-3 p-4 hover:bg-white/2 transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-indigo-600/20 flex items-center justify-center flex-shrink-0">
+                      <span className="text-indigo-400 text-xs font-semibold">{m.name?.[0]?.toUpperCase()}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-0.5">
                         <span className="text-white text-sm font-medium">{m.name}</span>
-                        <span className="text-white/30 text-xs font-mono">{m.email}</span>
+                        <span className="text-white/25 text-xs">{m.email}</span>
                       </div>
-                      <p className="text-white/40 text-xs truncate">{m.message}</p>
+                      <p className="text-white/35 text-xs truncate">{m.message}</p>
                     </div>
-                    <span className="text-white/20 text-xs font-mono flex-shrink-0">
+                    <span className="text-white/20 text-xs flex-shrink-0">
                       {new Date(m.createdAt).toLocaleDateString()}
                     </span>
                   </div>
@@ -106,6 +102,7 @@ export default function Dashboard() {
             )}
           </div>
         </div>
+
       </div>
     </AdminShell>
   )

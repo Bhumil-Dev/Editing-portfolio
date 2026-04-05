@@ -6,106 +6,91 @@ import { saveToken, isLoggedIn } from '@/lib/auth'
 
 export default function AdminLogin() {
   const router = useRouter()
-  const [form, setForm] = useState({ email: '', password: '' })
+  const [form, setForm]       = useState({ email: '', password: '' })
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [show, setShow] = useState(false)
+  const [error, setError]     = useState('')
+  const [show, setShow]       = useState(false)
 
   useEffect(() => {
     if (isLoggedIn()) router.replace('/admin/dashboard')
-    // Restore default cursor on login page
     document.body.classList.add('admin-page')
     return () => document.body.classList.remove('admin-page')
   }, [router])
 
   const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+    e.preventDefault(); setError(''); setLoading(true)
     try {
       const res = await api.login(form.email, form.password)
       saveToken(res.token)
       router.replace('/admin/dashboard')
-    } catch (err: any) {
-      setError(err.message || 'Login failed')
-    } finally {
-      setLoading(false)
-    }
+    } catch (err: any) { setError(err.message || 'Invalid credentials') }
+    finally { setLoading(false) }
   }
 
   return (
-    <div className="min-h-screen bg-[#030712] flex items-center justify-center p-4">
-      {/* Grid bg */}
-      <div className="fixed inset-0 opacity-20"
-        style={{
-          backgroundImage: 'linear-gradient(rgba(0,245,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.03) 1px,transparent 1px)',
-          backgroundSize: '60px 60px',
-        }}
-      />
+    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4"
+      style={{ fontFamily: 'var(--font-inter), Inter, sans-serif' }}>
 
-      {/* Glow */}
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-3xl opacity-10 pointer-events-none"
-        style={{ background: 'radial-gradient(circle, #7B2FBE, transparent)' }} />
-
-      <div className="relative w-full max-w-md">
+      <div className="w-full max-w-sm space-y-8">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center border-2 border-cyan-400/30"
-            style={{ background: 'radial-gradient(circle, rgba(0,245,255,0.1), transparent)' }}>
-            <span className="text-cyan-400 font-bold text-xl">BP</span>
+        <div className="text-center space-y-3">
+          <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center mx-auto">
+            <span className="text-white font-bold text-lg">BP</span>
           </div>
-          <h1 className="text-white font-bold text-2xl tracking-widest">ADMIN PANEL</h1>
-          <p className="text-white/30 text-xs font-mono mt-1 tracking-widest">SECURE ACCESS ONLY</p>
+          <div>
+            <h1 className="text-white font-semibold text-xl">Admin Panel</h1>
+            <p className="text-white/30 text-sm mt-1">Sign in to manage your portfolio</p>
+          </div>
         </div>
 
-        {/* Card */}
-        <div className="rounded-2xl p-8 border border-white/8"
-          style={{ background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(20px)' }}>
-          <form onSubmit={onSubmit} className="space-y-5">
-            <div>
-              <label className="text-white/40 text-xs font-mono tracking-widest block mb-2">EMAIL ADDRESS</label>
-              <input
-                type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
-                placeholder="admin@example.com" required
-                className="w-full bg-white/5 border border-white/10 text-white placeholder-white/20 px-4 py-3 rounded-lg font-mono text-sm focus:outline-none focus:border-cyan-400/50 transition-colors"
+        {/* Form */}
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div>
+            <label className="text-white/50 text-xs font-medium block mb-1.5">Email</label>
+            <input type="email" value={form.email}
+              onChange={e => setForm({ ...form, email: e.target.value })}
+              placeholder="bhumilprajapati4@gmail.com" required
+              className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/20 focus:outline-none transition-all"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+              onFocus={e => e.target.style.borderColor = 'rgba(99,102,241,0.5)'}
+              onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
+            />
+          </div>
+
+          <div>
+            <label className="text-white/50 text-xs font-medium block mb-1.5">Password</label>
+            <div className="relative">
+              <input type={show ? 'text' : 'password'} value={form.password}
+                onChange={e => setForm({ ...form, password: e.target.value })}
+                placeholder="••••••••" required
+                className="w-full px-4 py-3 pr-16 rounded-xl text-sm text-white placeholder-white/20 focus:outline-none transition-all"
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+                onFocus={e => e.target.style.borderColor = 'rgba(99,102,241,0.5)'}
+                onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
               />
+              <button type="button" onClick={() => setShow(!show)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 text-xs transition-colors px-1">
+                {show ? 'Hide' : 'Show'}
+              </button>
             </div>
-            <div>
-              <label className="text-white/40 text-xs font-mono tracking-widest block mb-2">PASSWORD</label>
-              <div className="relative">
-                <input
-                  type={show ? 'text' : 'password'} value={form.password}
-                  onChange={e => setForm({ ...form, password: e.target.value })}
-                  placeholder="••••••••" required
-                  className="w-full bg-white/5 border border-white/10 text-white placeholder-white/20 px-4 py-3 rounded-lg font-mono text-sm focus:outline-none focus:border-cyan-400/50 transition-colors pr-12"
-                />
-                <button type="button" onClick={() => setShow(!show)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 text-xs font-mono transition-colors">
-                  {show ? 'HIDE' : 'SHOW'}
-                </button>
-              </div>
-            </div>
+          </div>
 
-            {error && (
-              <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 text-red-400 text-sm font-mono">
-                ⚠ {error}
-              </div>
-            )}
+          {error && (
+            <p className="text-red-400 text-xs px-1">{error}</p>
+          )}
 
-            <button type="submit" disabled={loading}
-              className="w-full py-3 rounded-lg font-bold text-sm tracking-widest transition-all duration-300 disabled:opacity-50"
-              style={{
-                background: loading ? 'rgba(0,245,255,0.3)' : 'linear-gradient(135deg, #00F5FF, #7B2FBE)',
-                color: loading ? '#fff' : '#030712',
-              }}
-            >
-              {loading ? 'AUTHENTICATING...' : 'LOGIN →'}
-            </button>
-          </form>
-        </div>
+          <button type="submit" disabled={loading}
+            className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50"
+            style={{ background: loading ? 'rgba(99,102,241,0.5)' : '#6366f1' }}
+            onMouseEnter={e => { if (!loading) (e.target as HTMLElement).style.background = '#4f46e5' }}
+            onMouseLeave={e => { if (!loading) (e.target as HTMLElement).style.background = '#6366f1' }}
+          >
+            {loading ? 'Signing in...' : 'Sign In'}
+          </button>
+        </form>
 
-        <p className="text-center text-white/15 text-xs font-mono mt-6 tracking-widest">
-          PROTECTED BY JWT + BCRYPT
+        <p className="text-center text-white/15 text-xs">
+          Protected with JWT + bcrypt
         </p>
       </div>
     </div>

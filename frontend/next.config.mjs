@@ -1,22 +1,20 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    // Disable ESLint during production builds — handled separately
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    // Allow production builds even with type errors
-    ignoreBuildErrors: true,
-  },
+  eslint:     { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
   images: {
+    unoptimized: true,
     domains: [
       'images.unsplash.com',
       'upload.wikimedia.org',
       'cdn.worldvectorlogo.com',
-      'cdn.jsdelivr.net',
       'localhost',
       'bhumil-portfolio-backend.onrender.com',
     ],
+  },
+  experimental: {
+    workerThreads: false,
+    cpus: 1,
   },
 }
 
