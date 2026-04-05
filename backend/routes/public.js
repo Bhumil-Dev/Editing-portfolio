@@ -5,5 +5,6 @@ router.get('/profile',  ctrl.publicProfile)
 router.get('/skills',   ctrl.publicSkills)
 router.get('/services', ctrl.publicServices)
 router.get('/projects', ctrl.publicProjects)
+router.get('/stats',    ctrl.publicStats)
 
 module.exports = router

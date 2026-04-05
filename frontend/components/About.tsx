@@ -3,36 +3,34 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import CountUp from 'react-countup'
 import { useInView as useIO } from 'react-intersection-observer'
-import { stats } from '@/data'
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 
 interface Profile {
-  name: string
-  title: string
-  tagline: string
-  about: string
-  profilePhoto: string
-  location: string
+  name: string; title: string; tagline: string
+  about: string; profilePhoto: string; location: string
 }
+interface StatsData { projects: number; clients: number; years: number; views: number }
 
 export default function About() {
   const { ref: countRef, inView } = useIO({ triggerOnce: true })
   const [profile, setProfile] = useState<Profile>({
-    name:         'Bhumil Prajapati',
-    title:        'Video Editor & MERN Stack Developer',
-    tagline:      'I Turn Ideas Into Visual Experiences',
-    about:        '',
-    profilePhoto: '',
-    location:     'India',
+    name: 'Bhumil Prajapati', title: 'Video Editor & MERN Stack Developer',
+    tagline: 'I Turn Ideas Into Visual Experiences', about: '', profilePhoto: '', location: 'India',
   })
+  const [statsData, setStatsData] = useState<StatsData>({ projects: 50, clients: 20, years: 3, views: 1 })
 
   useEffect(() => {
-    fetch(`${API}/api/profile`)
-      .then(r => r.json())
-      .then(d => { if (d.success && d.data) setProfile(d.data) })
-      .catch(() => {})
+    fetch(`${API}/api/profile`).then(r=>r.json()).then(d=>{ if(d.success&&d.data) setProfile(d.data) }).catch(()=>{})
+    fetch(`${API}/api/stats`).then(r=>r.json()).then(d=>{ if(d.success&&d.data) setStatsData(d.data) }).catch(()=>{})
   }, [])
+
+  const displayStats = [
+    { value: statsData.projects, label: 'Projects Completed', suffix: '+' },
+    { value: statsData.clients,  label: 'Happy Clients',       suffix: '+' },
+    { value: statsData.years,    label: 'Years Experience',    suffix: '+' },
+    { value: statsData.views,    label: 'Million Views',       suffix: 'M+' },
+  ]
 
   const initials = profile.name
     ? profile.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -149,9 +147,9 @@ export default function About() {
           </motion.div>
         </div>
 
-        {/* Stats */}
+        {/* Stats — from DB */}
         <div ref={countRef} className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20">
-          {stats.map((s, i) => (
+          {displayStats.map((s, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }} transition={{ delay: i * 0.1 }}
               className="glass p-6 text-center rounded-xl hover:glass-cyan transition-all duration-300">

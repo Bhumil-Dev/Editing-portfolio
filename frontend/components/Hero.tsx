@@ -79,10 +79,10 @@ export default function Hero() {
         {/* Available badge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-          className="inline-flex items-center gap-2 glass-cyan px-4 py-2 rounded-full mb-8"
+          className="inline-flex items-center gap-2 glass-accent px-4 py-2 rounded-full mb-8"
         >
-          <span className="w-2 h-2 rounded-full bg-neon animate-pulse" />
-          <span className="text-cyan font-mono text-xs tracking-[0.3em]">AVAILABLE FOR PROJECTS</span>
+          <span className="w-2 h-2 rounded-full bg-emerald animate-pulse" />
+          <span className="text-accent-light font-mono text-xs tracking-[0.2em]">AVAILABLE FOR PROJECTS</span>
         </motion.div>
 
         {/* Dynamic headline from tagline */}
@@ -93,38 +93,38 @@ export default function Hero() {
             ))}
             <br />
             {taglineWords.slice(Math.ceil(taglineWords.length / 2)).map((w, i) => (
-              <span key={i} className="word inline-block opacity-0 mr-3 cyan-text text-glow-cyan">{w}</span>
+              <span key={i} className="word inline-block opacity-0 mr-3 accent-text text-glow">{w}</span>
             ))}
           </h1>
         </div>
 
         {/* Dynamic type animation from title */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.2 }}
-          className="text-white/40 font-mono text-sm md:text-lg mb-10 h-8"
+          className="text-white/40 font-mono text-sm md:text-base mb-10 h-7"
         >
-          <span className="text-cyan/60">{'> '}</span>
+          <span className="text-accent-light/60">{'> '}</span>
           <TypeAnimation
             sequence={typeSequence}
             wrapper="span" speed={50} repeat={Infinity}
           />
-          <span className="text-cyan animate-pulse">_</span>
+          <span className="text-accent-light animate-pulse">_</span>
         </motion.div>
 
         {/* CTAs */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 2.5 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <a href="#portfolio" className="btn-primary">VIEW MY WORK</a>
-          <a href="#contact"   className="btn-outline">LET&apos;S TALK →</a>
+          <a href="#portfolio" className="btn-primary">View My Work</a>
+          <a href="#contact"   className="btn-outline">Let&apos;s Talk →</a>
         </motion.div>
 
         {/* Scroll indicator */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 3 }}
           className="hidden sm:flex absolute bottom-10 left-1/2 -translate-x-1/2 flex-col items-center gap-2"
         >
-          <span className="text-white/20 font-mono text-xs tracking-[0.4em]">SCROLL</span>
-          <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 1.5, repeat: Infinity }}
-            className="w-px h-12 bg-gradient-to-b from-cyan/60 to-transparent" />
+          <span className="text-white/20 font-mono text-xs tracking-[0.3em]">SCROLL</span>
+          <motion.div animate={{ y: [0, 8, 0] }} transition={{ duration: 1.5, repeat: Infinity }}
+            className="w-px h-10 bg-gradient-to-b from-accent/50 to-transparent" />
         </motion.div>
       </div>
     </section>

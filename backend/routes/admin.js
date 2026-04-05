@@ -36,5 +36,7 @@ router.delete('/messages/:id',  auth, ctrl.deleteMessage)
 
 // Stats
 router.get('/stats',            auth, ctrl.getStats)
+router.get('/site-stats',       auth, ctrl.publicStats)
+router.put('/site-stats',       auth, ctrl.updateStats)
 
 module.exports = router

@@ -58,7 +58,7 @@ export default function Footer() {
                 <span className="text-cyan font-display text-xs font-bold">BP</span>
               </div>
             </div>
-            <span className="text-white/40 font-mono text-sm tracking-widest">BHUMIL PRAJAPATI</span>
+            <span className="text-white/40 text-sm tracking-wide">Bhumil Prajapati</span>
           </div>
 
           {/* Nav links */}

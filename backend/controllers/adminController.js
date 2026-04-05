@@ -154,6 +154,32 @@ exports.getStats = async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }) }
 }
 
+// ── Stats (public) ───────────────────────────────────────
+exports.publicStats = async (req, res) => {
+  try {
+    const Stats = require('../models/Stats')
+    let stats = await Stats.findOne()
+    if (!stats) stats = await Stats.create({})
+    res.json({ success: true, data: stats })
+  } catch (err) { res.status(500).json({ success: false, message: err.message }) }
+}
+
+// ── Stats (admin) ─────────────────────────────────────────
+exports.updateStats = async (req, res) => {
+  try {
+    const Stats = require('../models/Stats')
+    let stats = await Stats.findOne()
+    if (!stats) stats = await Stats.create({})
+    const { projects, clients, years, views } = req.body
+    if (projects !== undefined) stats.projects = projects
+    if (clients  !== undefined) stats.clients  = clients
+    if (years    !== undefined) stats.years    = years
+    if (views    !== undefined) stats.views    = views
+    await stats.save()
+    res.json({ success: true, data: stats })
+  } catch (err) { res.status(500).json({ success: false, message: err.message }) }
+}
+
 // ── Public ────────────────────────────────────────────────
 exports.publicProfile  = async (req, res) => {
   try { res.json({ success: true, data: await Admin.findOne().select('-password -__v') }) }

@@ -7,6 +7,7 @@ import { isLoggedIn, removeToken } from '@/lib/auth'
 const nav = [
   { href: '/admin/dashboard', icon: '⬡', label: 'Dashboard' },
   { href: '/admin/profile',   icon: '◉', label: 'Profile' },
+  { href: '/admin/stats',     icon: '◈', label: 'Stats' },
   { href: '/admin/skills',    icon: '◈', label: 'Skills' },
   { href: '/admin/services',  icon: '◇', label: 'Services' },
   { href: '/admin/portfolio', icon: '◰', label: 'Portfolio' },
