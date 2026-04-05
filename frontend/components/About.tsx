@@ -7,29 +7,44 @@ import { useInView as useIO } from 'react-intersection-observer'
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 
 interface Profile { name: string; title: string; about: string; profilePhoto: string; location: string }
-interface StatsData { projects: number; clients: number; years: number; views: number }
+interface StatItem { value: number; label: string; suffix: string; visible: boolean }
+interface StatsData {
+  projects: StatItem | number
+  clients:  StatItem | number
+  years:    StatItem | number
+  views:    StatItem | number
+}
 
 const card = { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }
+
+// Normalize stat — handles both old flat number and new object format
+function normStat(raw: any, defaultLabel: string, defaultSuffix: string): StatItem {
+  if (typeof raw === 'object' && raw !== null) return { value: raw.value ?? 0, label: raw.label || defaultLabel, suffix: raw.suffix || defaultSuffix, visible: raw.visible !== false }
+  return { value: raw ?? 0, label: defaultLabel, suffix: defaultSuffix, visible: true }
+}
 
 export default function About() {
   const { ref: countRef, inView } = useIO({ triggerOnce: true })
   const [profile, setProfile] = useState<Profile>({ name: 'Bhumil Prajapati', title: 'Video Editor & MERN Stack Developer', about: '', profilePhoto: '', location: 'India' })
-  const [stats, setStats] = useState<StatsData>({ projects: 50, clients: 20, years: 3, views: 1 })
+  const [rawStats, setRawStats] = useState<any>({ projects: 50, clients: 20, years: 3, views: 1 })
 
   useEffect(() => {
     fetch(`${API}/api/profile`).then(r => r.json()).then(d => { if (d.success && d.data) setProfile(d.data) }).catch(() => {})
-    fetch(`${API}/api/stats`).then(r => r.json()).then(d => { if (d.success && d.data) setStats(d.data) }).catch(() => {})
+    fetch(`${API}/api/stats`).then(r => r.json()).then(d => { if (d.success && d.data) setRawStats(d.data) }).catch(() => {})
   }, [])
+
+  const stats = {
+    projects: normStat(rawStats.projects, 'Projects Completed', '+'),
+    clients:  normStat(rawStats.clients,  'Happy Clients',       '+'),
+    years:    normStat(rawStats.years,    'Years Experience',    '+'),
+    views:    normStat(rawStats.views,    'Million Views',       'M+'),
+  }
+
+  // Only show visible stats
+  const visibleStats = Object.values(stats).filter(s => s.visible)
 
   const initials = profile.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'BP'
   const about = profile.about || `Professional Video Editor and MERN Stack Developer based in ${profile.location || 'India'}. Creating cinematic content that drives real results.`
-
-  const statItems = [
-    { value: stats.projects, label: 'Projects', suffix: '+' },
-    { value: stats.clients,  label: 'Clients',  suffix: '+' },
-    { value: stats.years,    label: 'Years Exp', suffix: '+' },
-    { value: stats.views,    label: 'M+ Views',  suffix: 'M+' },
-  ]
 
   return (
     <section id="about" className="section-padding relative" style={{ background: '#0d0d0d' }}>
@@ -58,12 +73,12 @@ export default function About() {
                   <p className="text-white/20 text-xs">Upload photo in Admin Panel</p>
                 </div>
               )}
-              {/* Exp badge */}
+              {/* Exp badge — uses years stat */}
               <motion.div animate={{ y: [0, -6, 0] }} transition={{ duration: 3, repeat: Infinity }}
                 className="absolute bottom-5 right-5 px-4 py-3 rounded-xl"
                 style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.3)', backdropFilter: 'blur(12px)' }}>
-                <p className="text-indigo-300 font-bold text-xl leading-none">{stats.years}+</p>
-                <p className="text-white/40 text-xs mt-0.5">Years Exp.</p>
+                <p className="text-indigo-300 font-bold text-xl leading-none">{stats.years.value}{stats.years.suffix}</p>
+                <p className="text-white/40 text-xs mt-0.5">{stats.years.label}</p>
               </motion.div>
             </div>
           </motion.div>
@@ -105,20 +120,24 @@ export default function About() {
           </motion.div>
         </div>
 
-        {/* Stats */}
-        <div ref={countRef} className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16">
-          {statItems.map((s, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }} transition={{ delay: i * 0.08 }}
-              className="p-5 rounded-xl text-center" style={card}>
-              <p className="text-3xl font-bold mb-1"
-                style={{ background: 'linear-gradient(135deg, #818cf8, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', fontFamily: 'var(--font-poppins), Poppins, sans-serif' }}>
-                {inView ? <CountUp end={s.value} duration={2} suffix={s.suffix} /> : `0${s.suffix}`}
-              </p>
-              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>{s.label}</p>
-            </motion.div>
-          ))}
-        </div>
+        {/* Stats — only visible ones, dynamic columns */}
+        {visibleStats.length > 0 && (
+          <div ref={countRef}
+            className="grid gap-4 mt-16"
+            style={{ gridTemplateColumns: `repeat(${Math.min(visibleStats.length, 4)}, 1fr)` }}>
+            {visibleStats.map((s, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }} transition={{ delay: i * 0.08 }}
+                className="p-5 rounded-xl text-center" style={card}>
+                <p className="text-3xl font-bold mb-1"
+                  style={{ background: 'linear-gradient(135deg, #818cf8, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', fontFamily: 'var(--font-poppins), Poppins, sans-serif' }}>
+                  {inView ? <CountUp end={s.value} duration={2} suffix={s.suffix} /> : `0${s.suffix}`}
+                </p>
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>{s.label}</p>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )

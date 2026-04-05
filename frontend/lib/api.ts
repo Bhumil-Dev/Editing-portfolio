@@ -31,7 +31,7 @@ export const api = {
 
   // Stats
   stats:         () => req('GET', '/api/admin/stats'),
-  getSiteStats:  () => req('GET', '/api/stats'),
+  getSiteStats:    () => req('GET', '/api/stats'),
   updateSiteStats: (data: any) => req('PUT', '/api/admin/site-stats', data),
 
   // Profile

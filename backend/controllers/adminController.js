@@ -164,17 +164,34 @@ exports.publicStats = async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }) }
 }
 
-// ── Stats (admin) ─────────────────────────────────────────
+// ── Stats (admin update) ──────────────────────────────────
 exports.updateStats = async (req, res) => {
   try {
     const Stats = require('../models/Stats')
     let stats = await Stats.findOne()
     if (!stats) stats = await Stats.create({})
-    const { projects, clients, years, views } = req.body
-    if (projects !== undefined) stats.projects = projects
-    if (clients  !== undefined) stats.clients  = clients
-    if (years    !== undefined) stats.years    = years
-    if (views    !== undefined) stats.views    = views
+
+    // Accept full nested objects per stat key
+    const keys = ['projects', 'clients', 'years', 'views']
+    keys.forEach(k => {
+      if (req.body[k] !== undefined) {
+        const incoming = req.body[k]
+        if (typeof incoming === 'object') {
+          if (incoming.value   !== undefined) stats[k].value   = incoming.value
+          if (incoming.label   !== undefined) stats[k].label   = incoming.label
+          if (incoming.suffix  !== undefined) stats[k].suffix  = incoming.suffix
+          if (incoming.visible !== undefined) stats[k].visible = incoming.visible
+        } else {
+          // backward compat: plain number
+          stats[k].value = incoming
+        }
+      }
+    })
+
+    stats.markModified('projects')
+    stats.markModified('clients')
+    stats.markModified('years')
+    stats.markModified('views')
     await stats.save()
     res.json({ success: true, data: stats })
   } catch (err) { res.status(500).json({ success: false, message: err.message }) }
