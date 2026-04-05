@@ -42,10 +42,7 @@ export default function HeroVisualEdit() {
       .catch(() => {})
   }, [])
 
-  const floatStats = [
-    { value: `${stats.views}M+`,    label: 'Views',    color: '#8b5cf6', pos: 'top-4 right-0',   delay: 0.9 },
-    { value: `${stats.projects}+`,  label: 'Projects', color: '#10b981', pos: 'bottom-8 left-0', delay: 1.1 },
-  ]
+  const floatStats: never[] = []
   return (
     <div className="relative w-full h-[480px] flex items-center justify-center select-none">
 

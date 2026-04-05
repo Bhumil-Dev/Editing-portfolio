@@ -38,10 +38,7 @@ export default function HeroVisual() {
       .catch(() => {})
   }, [])
 
-  const floatStats = [
-    { value: `${stats.projects}+`, label: 'Projects', color: '#6366f1', pos: 'top-4 right-0',   delay: 0.9 },
-    { value: `${stats.years}+`,   label: 'Yrs Exp',  color: '#10b981', pos: 'bottom-8 left-0', delay: 1.1 },
-  ]
+  const floatStats: never[] = []
   return (
     <div className="relative w-full h-[480px] flex items-center justify-center select-none">
 
