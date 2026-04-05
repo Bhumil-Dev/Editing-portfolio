@@ -14,7 +14,7 @@ const socials = [
   },
   {
     label: 'Instagram',
-    href: '#',
+    href: 'https://www.instagram.com/bhumil_0003/',
     color: '#E1306C',
     svg: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
@@ -24,7 +24,7 @@ const socials = [
   },
   {
     label: 'LinkedIn',
-    href: '#',
+    href: 'https://www.linkedin.com/in/bhumil-prajapati-07429a374/',
     color: '#0A66C2',
     svg: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
@@ -34,7 +34,7 @@ const socials = [
   },
   {
     label: 'GitHub',
-    href: '#',
+    href: 'https://github.com/Bhumil-Dev',
     color: '#ffffff',
     svg: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">

@@ -69,15 +69,40 @@ async function seedAdmin() {
     const exists = await Admin.findOne({ email: process.env.ADMIN_EMAIL })
     if (!exists) {
       await Admin.create({
-        email:    process.env.ADMIN_EMAIL,
-        password: process.env.ADMIN_PASSWORD || '30048207',
-        name:     'Bhumil Prajapati',
-        title:    'Video Editor & MERN Stack Developer',
-        tagline:  'I Turn Ideas Into Visual Experiences',
+        email:        process.env.ADMIN_EMAIL,
+        password:     process.env.ADMIN_PASSWORD || '30048207',
+        name:         'Bhumil Prajapati',
+        title:        'Video Editor & MERN Stack Developer',
+        tagline:      'I Turn Ideas Into Visual Experiences',
+        phone:        '8511872920',
+        contactEmail: 'bhumilprajapati4@gmail.com',
+        whatsapp:     '918511872920',
+        location:     'India (Available Worldwide)',
+        social: {
+          instagram: 'https://www.instagram.com/bhumil_0003/',
+          linkedin:  'https://www.linkedin.com/in/bhumil-prajapati-07429a374/',
+          github:    'https://github.com/Bhumil-Dev',
+          youtube:   '',
+          twitter:   '',
+        },
       })
       console.log('✅ Admin seeded →', process.env.ADMIN_EMAIL)
     } else {
-      console.log('✅ Admin exists →', process.env.ADMIN_EMAIL)
+      // Update contact details on existing admin if still placeholder
+      if (!exists.whatsapp || exists.whatsapp === '919876543210') {
+        await Admin.findByIdAndUpdate(exists._id, {
+          phone:        '8511872920',
+          contactEmail: 'bhumilprajapati4@gmail.com',
+          whatsapp:     '918511872920',
+          location:     'India (Available Worldwide)',
+          'social.instagram': 'https://www.instagram.com/bhumil_0003/',
+          'social.linkedin':  'https://www.linkedin.com/in/bhumil-prajapati-07429a374/',
+          'social.github':    'https://github.com/Bhumil-Dev',
+        })
+        console.log('✅ Admin contact details updated')
+      } else {
+        console.log('✅ Admin exists →', process.env.ADMIN_EMAIL)
+      }
     }
   } catch (err) {
     console.error('⚠ Seed error:', err.message)
