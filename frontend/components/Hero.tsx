@@ -1,7 +1,9 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import Image from 'next/image'
+import dynamic from 'next/dynamic'
+
+const HeroVisual = dynamic(() => import('./HeroVisual'), { ssr: false })
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
 
@@ -47,28 +49,14 @@ export default function Hero() {
       <div className="relative z-10 max-w-6xl mx-auto px-6 w-full">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center min-h-screen py-24 lg:py-0">
 
-          {/* ── LEFT — Illustration ── */}
+          {/* ── LEFT — Animated Visual ── */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.9, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="flex items-center justify-center order-2 lg:order-1"
           >
-            <motion.div
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-              className="relative w-full max-w-xl"
-            >
-              <Image
-                src="/hero-illustration.png"
-                alt="Bhumil Prajapati — Video Editor & Developer"
-                width={800}
-                height={520}
-                priority
-                className="w-full h-auto object-contain"
-                style={{ filter: 'drop-shadow(0 20px 60px rgba(99,102,241,0.15))' }}
-              />
-            </motion.div>
+            <HeroVisual />
           </motion.div>
 
           {/* ── RIGHT — Content ── */}
