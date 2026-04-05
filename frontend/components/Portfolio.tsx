@@ -1,14 +1,48 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Project } from '@/data'
 
-const API  = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-const cats = ['All', 'Video Editing', 'Motion Graphics', 'Web Development']
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+
+// Main tabs — Web vs Video/Editing
+const TABS = [
+  { key: 'video', label: '🎬 Video Editing', cats: ['Video Editing', 'Motion Graphics'] },
+  { key: 'web',   label: '💻 Web Projects',  cats: ['Web Development'] },
+]
+
+// Sub-filters per tab
+const SUB_FILTERS: Record<string, string[]> = {
+  video: ['All', 'Video Editing', 'Motion Graphics'],
+  web:   ['All', 'Web Development'],
+}
+
+function isYouTube(url: string) { return url?.includes('youtube.com') || url?.includes('youtu.be') }
+function isVimeo(url: string)   { return url?.includes('vimeo.com') }
+
+function toEmbedUrl(url: string): string {
+  if (!url) return ''
+  // Already embed
+  if (url.includes('/embed/')) return url
+  // YouTube watch → embed
+  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&rel=0`
+  // Vimeo
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
+  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`
+  return url
+}
+
+function isDirectLink(url: string): boolean {
+  // Not a known embed platform — treat as external link
+  if (!url) return false
+  return !isYouTube(url) && !isVimeo(url) && !url.includes('/embed/')
+}
 
 export default function Portfolio() {
   const [projects, setProjects] = useState<Project[]>([])
-  const [filter, setFilter]     = useState('All')
+  const [tab, setTab]           = useState('video')
+  const [subFilter, setSubFilter] = useState('All')
   const [selected, setSelected] = useState<Project | null>(null)
   const [loading, setLoading]   = useState(true)
 
@@ -20,8 +54,23 @@ export default function Portfolio() {
       .finally(() => setLoading(false))
   }, [])
 
-  const filtered = filter === 'All' ? projects : projects.filter(p => p.category === filter)
-  const imgSrc   = (url: string) => url?.startsWith('/uploads') ? `${API}${url}` : url || ''
+  // Reset sub-filter when tab changes
+  const switchTab = (key: string) => { setTab(key); setSubFilter('All') }
+
+  const currentTab  = TABS.find(t => t.key === tab)!
+  const tabProjects = projects.filter(p => currentTab.cats.includes(p.category))
+  const filtered    = subFilter === 'All' ? tabProjects : tabProjects.filter(p => p.category === subFilter)
+
+  const imgSrc = (url: string) => url?.startsWith('/uploads') ? `${API}${url}` : url || ''
+
+  const openProject = (p: Project) => {
+    // If video project with a direct external link → open in new tab
+    if (tab === 'video' && p.videoUrl && isDirectLink(p.videoUrl)) {
+      window.open(p.videoUrl, '_blank', 'noopener,noreferrer')
+      return
+    }
+    setSelected(p)
+  }
 
   return (
     <section id="portfolio" className="section-padding relative" style={{ background: '#0a0a0a' }}>
@@ -44,29 +93,52 @@ export default function Portfolio() {
           </span>
         </motion.h2>
 
-        {/* Filter buttons — FIXED */}
-        <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-          className="flex flex-wrap gap-2 mb-10">
-          {cats.map(c => (
-            <button
-              key={c}
-              onClick={() => setFilter(c)}
-              className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+        {/* ── Main Tabs: Video vs Web ── */}
+        <div className="flex gap-2 mb-6 p-1 rounded-xl w-fit"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          {TABS.map(t => (
+            <button key={t.key} onClick={() => switchTab(t.key)}
+              className="px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200"
               style={{
-                background:   filter === c ? '#6366f1'                    : 'rgba(255,255,255,0.04)',
-                color:        filter === c ? '#ffffff'                    : 'rgba(255,255,255,0.45)',
-                border:       filter === c ? '1px solid #6366f1'          : '1px solid rgba(255,255,255,0.08)',
-                boxShadow:    filter === c ? '0 4px 14px rgba(99,102,241,0.25)' : 'none',
-              }}
-              onMouseEnter={e => { if (filter !== c) { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'rgba(99,102,241,0.3)' } }}
-              onMouseLeave={e => { if (filter !== c) { e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' } }}
-            >
-              {c}
+                background: tab === t.key ? '#6366f1' : 'transparent',
+                color:      tab === t.key ? '#fff'    : 'rgba(255,255,255,0.45)',
+                boxShadow:  tab === t.key ? '0 4px 14px rgba(99,102,241,0.3)' : 'none',
+              }}>
+              {t.label}
             </button>
           ))}
-        </motion.div>
+        </div>
 
-        {/* Loading skeletons */}
+        {/* ── Sub-filters ── */}
+        {SUB_FILTERS[tab].length > 2 && (
+          <div className="flex flex-wrap gap-2 mb-8">
+            {SUB_FILTERS[tab].map(f => (
+              <button key={f} onClick={() => setSubFilter(f)}
+                className="px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200"
+                style={{
+                  background:   subFilter === f ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.03)',
+                  color:        subFilter === f ? '#a5b4fc'                : 'rgba(255,255,255,0.4)',
+                  border:       subFilter === f ? '1px solid rgba(99,102,241,0.35)' : '1px solid rgba(255,255,255,0.07)',
+                }}>
+                {f}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* ── Video tab hint ── */}
+        {tab === 'video' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            className="flex items-center gap-2 mb-6 px-3 py-2 rounded-lg w-fit"
+            style={{ background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)' }}>
+            <span className="text-violet-400 text-xs">▶</span>
+            <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              Click any project to watch the video
+            </span>
+          </motion.div>
+        )}
+
+        {/* Loading */}
         {loading && (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(3)].map((_, i) => (
@@ -75,7 +147,7 @@ export default function Portfolio() {
                 <div className="aspect-video" style={{ background: 'rgba(255,255,255,0.04)' }} />
                 <div className="p-4 space-y-2">
                   <div className="h-4 rounded w-3/4" style={{ background: 'rgba(255,255,255,0.05)' }} />
-                  <div className="h-3 rounded w-full" style={{ background: 'rgba(255,255,255,0.04)' }} />
+                  <div className="h-3 rounded" style={{ background: 'rgba(255,255,255,0.04)' }} />
                 </div>
               </div>
             ))}
@@ -85,19 +157,22 @@ export default function Portfolio() {
         {/* Empty */}
         {!loading && filtered.length === 0 && (
           <div className="text-center py-20 text-sm" style={{ color: 'rgba(255,255,255,0.2)' }}>
-            No projects yet. Add them from the Admin Panel.
+            No {tab === 'video' ? 'video' : 'web'} projects yet. Add them from the Admin Panel.
           </div>
         )}
 
         {/* Grid */}
         {!loading && filtered.length > 0 && (
-          <motion.div layout className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <AnimatePresence>
+          <AnimatePresence mode="wait">
+            <motion.div key={tab + subFilter} layout
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filtered.map((p, i) => (
-                <motion.div key={p._id} layout
-                  initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.3, delay: i * 0.05 }}
-                  onClick={() => setSelected(p)}
+                <motion.div key={p._id}
+                  initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  onClick={() => openProject(p)}
                   className="group rounded-xl overflow-hidden cursor-pointer transition-all duration-200"
                   style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}
                   whileHover={{ y: -4, borderColor: 'rgba(99,102,241,0.3)' }}>
@@ -110,24 +185,46 @@ export default function Portfolio() {
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center text-4xl"
-                        style={{ color: 'rgba(255,255,255,0.1)' }}>🎬</div>
+                        style={{ color: 'rgba(255,255,255,0.1)' }}>
+                        {tab === 'video' ? '🎬' : '💻'}
+                      </div>
                     )}
-                    {/* Overlay on hover */}
+
+                    {/* Hover overlay */}
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                      style={{ background: 'rgba(0,0,0,0.4)' }}>
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center"
-                        style={{ background: '#6366f1', boxShadow: '0 0 20px rgba(99,102,241,0.5)' }}>
-                        <span className="text-white text-lg">▶</span>
+                      style={{ background: 'rgba(0,0,0,0.45)' }}>
+                      <div className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-white"
+                        style={{ background: tab === 'video' ? '#8b5cf6' : '#6366f1', boxShadow: '0 0 20px rgba(99,102,241,0.4)' }}>
+                        {tab === 'video' ? (
+                          <><span>▶</span> Watch Video</>
+                        ) : (
+                          <><span>→</span> View Project</>
+                        )}
                       </div>
                     </div>
+
                     {/* Category badge */}
                     <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-medium"
-                      style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.3)', color: '#a5b4fc', backdropFilter: 'blur(8px)' }}>
+                      style={{
+                        background: tab === 'video' ? 'rgba(139,92,246,0.2)' : 'rgba(99,102,241,0.2)',
+                        border:     tab === 'video' ? '1px solid rgba(139,92,246,0.35)' : '1px solid rgba(99,102,241,0.35)',
+                        color:      tab === 'video' ? '#c4b5fd' : '#a5b4fc',
+                        backdropFilter: 'blur(8px)',
+                      }}>
                       {p.category}
                     </div>
-                    {/* Featured badge */}
+
+                    {/* External link indicator for video */}
+                    {tab === 'video' && p.videoUrl && isDirectLink(p.videoUrl) && (
+                      <div className="absolute top-3 right-3 px-2 py-1 rounded-full text-xs"
+                        style={{ background: 'rgba(0,0,0,0.6)', color: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(8px)' }}>
+                        ↗ External
+                      </div>
+                    )}
+
+                    {/* Featured */}
                     {p.featured && (
-                      <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-medium"
+                      <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full text-xs font-medium"
                         style={{ background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.3)', color: '#6ee7b7', backdropFilter: 'blur(8px)' }}>
                         ★ Featured
                       </div>
@@ -138,20 +235,36 @@ export default function Portfolio() {
                   <div className="p-4">
                     <h3 className="text-white font-semibold text-sm mb-1 group-hover:text-indigo-300 transition-colors">{p.title}</h3>
                     <p className="text-xs leading-relaxed line-clamp-2" style={{ color: 'rgba(255,255,255,0.35)' }}>{p.description}</p>
+                    {/* Tools */}
+                    {p.tools?.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2.5">
+                        {p.tools.slice(0, 3).map(t => (
+                          <span key={t} className="px-2 py-0.5 rounded text-xs"
+                            style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.35)' }}>
+                            {t}
+                          </span>
+                        ))}
+                        {p.tools.length > 3 && (
+                          <span className="px-2 py-0.5 rounded text-xs" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                            +{p.tools.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ))}
-            </AnimatePresence>
-          </motion.div>
+            </motion.div>
+          </AnimatePresence>
         )}
       </div>
 
-      {/* ── Modal ── */}
+      {/* ── Modal — for embed videos and web projects ── */}
       <AnimatePresence>
         {selected && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)' }}
+            style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(16px)' }}
             onClick={() => setSelected(null)}>
             <motion.div
               initial={{ scale: 0.9, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 30 }}
@@ -160,17 +273,24 @@ export default function Portfolio() {
               style={{ background: '#0f0f17', border: '1px solid rgba(255,255,255,0.1)' }}
               onClick={e => e.stopPropagation()}>
 
-              {/* Media */}
+              {/* Video / Image */}
               <div className="relative aspect-video" style={{ background: '#000' }}>
-                {selected.videoUrl
-                  ? <iframe src={selected.videoUrl} className="w-full h-full" allowFullScreen title={selected.title} />
-                  : <img src={imgSrc(selected.thumbnail)} alt={selected.title} className="w-full h-full object-cover" />}
-                {/* Top bar */}
+                {selected.videoUrl && !isDirectLink(selected.videoUrl) ? (
+                  <iframe
+                    src={toEmbedUrl(selected.videoUrl)}
+                    className="w-full h-full"
+                    allowFullScreen
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                    title={selected.title}
+                  />
+                ) : (
+                  <img src={imgSrc(selected.thumbnail)} alt={selected.title} className="w-full h-full object-cover" />
+                )}
                 <div className="absolute top-0 left-0 right-0 h-px"
                   style={{ background: 'linear-gradient(90deg, transparent, #6366f1, transparent)' }} />
               </div>
 
-              {/* Content */}
+              {/* Details */}
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
@@ -217,6 +337,20 @@ export default function Portfolio() {
                     </div>
                   )}
                 </div>
+
+                {/* External link button for video projects */}
+                {selected.videoUrl && (
+                  <div className="mt-5 pt-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                    <a href={selected.videoUrl} target="_blank" rel="noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                      style={{ background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.25)', color: '#c4b5fd' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(139,92,246,0.2)'; e.currentTarget.style.color = '#fff' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'rgba(139,92,246,0.12)'; e.currentTarget.style.color = '#c4b5fd' }}>
+                      ▶ Watch on {isYouTube(selected.videoUrl) ? 'YouTube' : isVimeo(selected.videoUrl) ? 'Vimeo' : 'External Site'}
+                      <span className="text-xs opacity-60">↗</span>
+                    </a>
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>
