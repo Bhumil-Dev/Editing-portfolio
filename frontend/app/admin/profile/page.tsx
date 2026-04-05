@@ -3,184 +3,170 @@ import { useEffect, useState, useRef } from 'react'
 import AdminShell from '@/components/admin/AdminShell'
 import { api } from '@/lib/api'
 
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+
+const inputCls = "w-full px-3.5 py-2.5 rounded-lg text-sm text-white placeholder-white/20 focus:outline-none transition-all"
+const inputStyle = { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }
+
+function Input({ label, value, onChange, placeholder, type = 'text' }: any) {
+  return (
+    <div>
+      <label className="block text-xs font-medium mb-1.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</label>
+      <input type={type} value={value || ''} onChange={onChange} placeholder={placeholder}
+        className={inputCls} style={inputStyle}
+        onFocus={e => e.target.style.borderColor = 'rgba(99,102,241,0.5)'}
+        onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'} />
+    </div>
+  )
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl p-5 space-y-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+      <p className="text-xs font-semibold tracking-widest" style={{ color: 'rgba(255,255,255,0.25)' }}>{title}</p>
+      {children}
+    </div>
+  )
+}
+
 export default function ProfilePage() {
   const [profile, setProfile] = useState<any>(null)
-  const [saving, setSaving] = useState(false)
-  const [msg, setMsg] = useState('')
+  const [saving, setSaving]   = useState(false)
+  const [msg, setMsg]         = useState('')
   const [uploading, setUploading] = useState<string | null>(null)
   const photoRef = useRef<HTMLInputElement>(null)
-  const logoRef = useRef<HTMLInputElement>(null)
+  const logoRef  = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    api.getProfile().then(r => setProfile(r.data))
-  }, [])
+  useEffect(() => { api.getProfile().then(r => setProfile(r.data)) }, [])
 
   const save = async () => {
     setSaving(true); setMsg('')
-    try {
-      await api.updateProfile(profile)
-      setMsg('✓ Profile saved successfully')
-    } catch (e: any) { setMsg('✗ ' + e.message) }
+    try { await api.updateProfile(profile); setMsg('✓ Saved') }
+    catch (e: any) { setMsg('✗ ' + e.message) }
     finally { setSaving(false) }
   }
 
-  const uploadPhoto = async (file: File, type: 'profile' | 'logo') => {
+  const upload = async (file: File, type: 'profile' | 'logo') => {
     setUploading(type)
     try {
       const res = await api.uploadFile(file, type)
       setProfile((p: any) => ({ ...p, [type === 'profile' ? 'profilePhoto' : 'logo']: res.url }))
-      setMsg(`✓ ${type === 'profile' ? 'Photo' : 'Logo'} uploaded`)
+      setMsg('✓ Uploaded')
     } catch (e: any) { setMsg('✗ ' + e.message) }
     finally { setUploading(null) }
   }
 
-  const set = (key: string, val: any) => setProfile((p: any) => ({ ...p, [key]: val }))
-  const setSocial = (key: string, val: string) => setProfile((p: any) => ({ ...p, social: { ...p.social, [key]: val } }))
+  const set = (k: string, v: any) => setProfile((p: any) => ({ ...p, [k]: v }))
+  const setSocial = (k: string, v: string) => setProfile((p: any) => ({ ...p, social: { ...p.social, [k]: v } }))
 
   if (!profile) return (
     <AdminShell>
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 rounded-full border-2 border-cyan-400/30 border-t-cyan-400 animate-spin" />
+      <div className="flex items-center justify-center h-48">
+        <div className="w-5 h-5 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin" />
       </div>
     </AdminShell>
   )
 
   return (
     <AdminShell>
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-5">
+
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-wider">Profile Settings</h1>
-            <p className="text-white/30 text-sm font-mono mt-1">Manage your public profile</p>
+            <h1 className="text-xl font-semibold text-white">Profile Settings</h1>
+            <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>Manage your public profile</p>
           </div>
           <button onClick={save} disabled={saving}
-            className="px-6 py-2.5 rounded-xl font-bold text-sm tracking-widest transition-all disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg, #00F5FF, #7B2FBE)', color: '#030712' }}>
-            {saving ? 'SAVING...' : 'SAVE CHANGES'}
+            className="px-5 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50 transition-all"
+            style={{ background: saving ? 'rgba(99,102,241,0.5)' : '#6366f1' }}
+            onMouseEnter={e => { if (!saving) (e.target as HTMLElement).style.background = '#4f46e5' }}
+            onMouseLeave={e => { if (!saving) (e.target as HTMLElement).style.background = '#6366f1' }}>
+            {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
 
         {msg && (
-          <div className={`px-4 py-3 rounded-xl text-sm font-mono border ${msg.startsWith('✓') ? 'text-green-400 border-green-400/20 bg-green-400/5' : 'text-red-400 border-red-400/20 bg-red-400/5'}`}>
+          <div className={`px-4 py-2.5 rounded-lg text-sm border ${msg.startsWith('✓') ? 'text-green-400 border-green-400/20 bg-green-400/5' : 'text-red-400 border-red-400/20 bg-red-400/5'}`}>
             {msg}
           </div>
         )}
 
-        {/* Photos */}
-        <div className="rounded-2xl p-6 border border-white/5 space-y-4" style={{ background: 'rgba(255,255,255,0.02)' }}>
-          <h2 className="text-white/60 text-xs font-mono tracking-widest">MEDIA</h2>
-          <div className="grid grid-cols-2 gap-6">
-            {/* Profile Photo */}
-            <div>
-              <p className="text-white/40 text-xs font-mono mb-3">PROFILE PHOTO</p>
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-full border-2 border-white/10 overflow-hidden flex items-center justify-center bg-white/5">
-                  {profile.profilePhoto
-                    ? <img src={`http://localhost:5000${profile.profilePhoto}`} alt="" className="w-full h-full object-cover" />
-                    : <span className="text-white/20 text-2xl font-bold">{profile.name?.[0]}</span>}
-                </div>
-                <div>
-                  <input ref={photoRef} type="file" accept="image/*" className="hidden"
-                    onChange={e => e.target.files?.[0] && uploadPhoto(e.target.files[0], 'profile')} />
-                  <button onClick={() => photoRef.current?.click()} disabled={uploading === 'profile'}
-                    className="px-4 py-2 rounded-lg border border-white/10 text-white/60 hover:text-white hover:border-white/20 text-xs font-mono transition-all">
-                    {uploading === 'profile' ? 'UPLOADING...' : 'UPLOAD PHOTO'}
-                  </button>
-                </div>
-              </div>
-            </div>
-            {/* Logo */}
-            <div>
-              <p className="text-white/40 text-xs font-mono mb-3">LOGO</p>
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-xl border-2 border-white/10 overflow-hidden flex items-center justify-center bg-white/5">
-                  {profile.logo
-                    ? <img src={`http://localhost:5000${profile.logo}`} alt="" className="w-full h-full object-contain p-2" />
-                    : <span className="text-white/20 text-xs font-mono">LOGO</span>}
-                </div>
-                <div>
-                  <input ref={logoRef} type="file" accept="image/*" className="hidden"
-                    onChange={e => e.target.files?.[0] && uploadPhoto(e.target.files[0], 'logo')} />
-                  <button onClick={() => logoRef.current?.click()} disabled={uploading === 'logo'}
-                    className="px-4 py-2 rounded-lg border border-white/10 text-white/60 hover:text-white hover:border-white/20 text-xs font-mono transition-all">
-                    {uploading === 'logo' ? 'UPLOADING...' : 'UPLOAD LOGO'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Basic Info */}
-        <div className="rounded-2xl p-6 border border-white/5 space-y-4" style={{ background: 'rgba(255,255,255,0.02)' }}>
-          <h2 className="text-white/60 text-xs font-mono tracking-widest">BASIC INFO</h2>
+        {/* Media */}
+        <Section title="MEDIA">
           <div className="grid grid-cols-2 gap-4">
             {[
-              { key: 'name', label: 'FULL NAME', placeholder: 'Bhumil Prajapati' },
-              { key: 'title', label: 'TITLE', placeholder: 'Video Editor & Developer' },
-            ].map(f => (
-              <div key={f.key}>
-                <label className="text-white/30 text-xs font-mono tracking-widest block mb-2">{f.label}</label>
-                <input value={profile[f.key] || ''} onChange={e => set(f.key, e.target.value)}
-                  placeholder={f.placeholder}
-                  className="w-full bg-white/5 border border-white/8 text-white placeholder-white/20 px-4 py-2.5 rounded-lg font-mono text-sm focus:outline-none focus:border-cyan-400/40 transition-colors" />
+              { label: 'Profile Photo', key: 'profilePhoto', ref: photoRef, type: 'profile' as const },
+              { label: 'Logo',          key: 'logo',         ref: logoRef,  type: 'logo'    as const },
+            ].map(item => (
+              <div key={item.key}>
+                <p className="text-xs font-medium mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>{item.label}</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    {profile[item.key]
+                      ? <img src={profile[item.key].startsWith('/uploads') ? `${API}${profile[item.key]}` : profile[item.key]}
+                          alt="" className="w-full h-full object-cover" />
+                      : <span className="text-white/20 text-xs">None</span>}
+                  </div>
+                  <div>
+                    <input ref={item.ref} type="file" accept="image/*" className="hidden"
+                      onChange={e => e.target.files?.[0] && upload(e.target.files[0], item.type)} />
+                    <button onClick={() => item.ref.current?.click()} disabled={uploading === item.type}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all disabled:opacity-50"
+                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }}>
+                      {uploading === item.type ? 'Uploading...' : 'Upload'}
+                    </button>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
-          <div>
-            <label className="text-white/30 text-xs font-mono tracking-widest block mb-2">TAGLINE</label>
-            <input value={profile.tagline || ''} onChange={e => set('tagline', e.target.value)}
-              placeholder="I Turn Ideas Into Visual Experiences"
-              className="w-full bg-white/5 border border-white/8 text-white placeholder-white/20 px-4 py-2.5 rounded-lg font-mono text-sm focus:outline-none focus:border-cyan-400/40 transition-colors" />
+        </Section>
+
+        {/* Basic info */}
+        <Section title="BASIC INFO">
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Full Name"  value={profile.name}    onChange={(e: any) => set('name', e.target.value)}    placeholder="Bhumil Prajapati" />
+            <Input label="Title"      value={profile.title}   onChange={(e: any) => set('title', e.target.value)}   placeholder="Video Editor & Developer" />
           </div>
+          <Input label="Tagline" value={profile.tagline} onChange={(e: any) => set('tagline', e.target.value)} placeholder="I Turn Ideas Into Visual Experiences" />
           <div>
-            <label className="text-white/30 text-xs font-mono tracking-widest block mb-2">ABOUT DESCRIPTION</label>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: 'rgba(255,255,255,0.4)' }}>About</label>
             <textarea value={profile.about || ''} onChange={e => set('about', e.target.value)}
-              placeholder="Write about yourself..." rows={5}
-              className="w-full bg-white/5 border border-white/8 text-white placeholder-white/20 px-4 py-2.5 rounded-lg font-mono text-sm focus:outline-none focus:border-cyan-400/40 transition-colors resize-none" />
+              placeholder="Write about yourself..." rows={4}
+              className={`${inputCls} resize-none`} style={inputStyle}
+              onFocus={e => e.target.style.borderColor = 'rgba(99,102,241,0.5)'}
+              onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'} />
           </div>
-        </div>
+        </Section>
 
         {/* Contact */}
-        <div className="rounded-2xl p-6 border border-white/5 space-y-4" style={{ background: 'rgba(255,255,255,0.02)' }}>
-          <h2 className="text-white/60 text-xs font-mono tracking-widest">CONTACT DETAILS</h2>
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              { key: 'contactEmail', label: 'EMAIL', placeholder: 'your@email.com' },
-              { key: 'phone', label: 'PHONE', placeholder: '+91 98765 43210' },
-              { key: 'whatsapp', label: 'WHATSAPP', placeholder: '+919876543210' },
-              { key: 'location', label: 'LOCATION', placeholder: 'India' },
-            ].map(f => (
-              <div key={f.key}>
-                <label className="text-white/30 text-xs font-mono tracking-widest block mb-2">{f.label}</label>
-                <input value={profile[f.key] || ''} onChange={e => set(f.key, e.target.value)}
-                  placeholder={f.placeholder}
-                  className="w-full bg-white/5 border border-white/8 text-white placeholder-white/20 px-4 py-2.5 rounded-lg font-mono text-sm focus:outline-none focus:border-cyan-400/40 transition-colors" />
-              </div>
-            ))}
+        <Section title="CONTACT">
+          <div className="grid grid-cols-2 gap-3">
+            <Input label="Email"     value={profile.contactEmail} onChange={(e: any) => set('contactEmail', e.target.value)} placeholder="your@email.com" type="email" />
+            <Input label="Phone"     value={profile.phone}        onChange={(e: any) => set('phone', e.target.value)}        placeholder="8511872920" />
+            <Input label="WhatsApp"  value={profile.whatsapp}     onChange={(e: any) => set('whatsapp', e.target.value)}     placeholder="918511872920" />
+            <Input label="Location"  value={profile.location}     onChange={(e: any) => set('location', e.target.value)}     placeholder="India" />
           </div>
-        </div>
+        </Section>
 
         {/* Social */}
-        <div className="rounded-2xl p-6 border border-white/5 space-y-4" style={{ background: 'rgba(255,255,255,0.02)' }}>
-          <h2 className="text-white/60 text-xs font-mono tracking-widest">SOCIAL MEDIA LINKS</h2>
-          <div className="grid grid-cols-2 gap-4">
+        <Section title="SOCIAL LINKS">
+          <div className="grid grid-cols-2 gap-3">
             {[
-              { key: 'youtube', label: 'YOUTUBE', placeholder: 'https://youtube.com/@...' },
-              { key: 'instagram', label: 'INSTAGRAM', placeholder: 'https://instagram.com/...' },
-              { key: 'linkedin', label: 'LINKEDIN', placeholder: 'https://linkedin.com/in/...' },
-              { key: 'github', label: 'GITHUB', placeholder: 'https://github.com/...' },
-              { key: 'twitter', label: 'TWITTER/X', placeholder: 'https://twitter.com/...' },
+              { key: 'instagram', label: 'Instagram', ph: 'https://instagram.com/...' },
+              { key: 'linkedin',  label: 'LinkedIn',  ph: 'https://linkedin.com/in/...' },
+              { key: 'github',    label: 'GitHub',    ph: 'https://github.com/...' },
+              { key: 'youtube',   label: 'YouTube',   ph: 'https://youtube.com/@...' },
+              { key: 'twitter',   label: 'Twitter/X', ph: 'https://twitter.com/...' },
             ].map(f => (
-              <div key={f.key}>
-                <label className="text-white/30 text-xs font-mono tracking-widest block mb-2">{f.label}</label>
-                <input value={profile.social?.[f.key] || ''} onChange={e => setSocial(f.key, e.target.value)}
-                  placeholder={f.placeholder}
-                  className="w-full bg-white/5 border border-white/8 text-white placeholder-white/20 px-4 py-2.5 rounded-lg font-mono text-sm focus:outline-none focus:border-cyan-400/40 transition-colors" />
-              </div>
+              <Input key={f.key} label={f.label} value={profile.social?.[f.key]}
+                onChange={(e: any) => setSocial(f.key, e.target.value)} placeholder={f.ph} />
             ))}
           </div>
-        </div>
+        </Section>
+
       </div>
     </AdminShell>
   )
